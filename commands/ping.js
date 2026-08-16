@@ -1,0 +1,72 @@
+/**
+ * Brownie-MD - A WhatsApp Bot
+ * Copyright (c) 2026 Ebube
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the MIT License.
+ */
+
+const os = require('os');
+const settings = require('../settings.js');
+
+const channelInfo = {
+    contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363161513685998@newsletter',
+            newsletterName: 'Brownie-MD',
+            serverMessageId: -1
+        }
+    }
+};
+
+function formatTime(seconds) {
+    const days = Math.floor(seconds / (24 * 60 * 60));
+    seconds = seconds % (24 * 60 * 60);
+    const hours = Math.floor(seconds / (60 * 60));
+    seconds = seconds % (60 * 60);
+    const minutes = Math.floor(seconds / 60);
+    seconds = Math.floor(seconds % 60);
+
+    let time = '';
+    if (days > 0) time += `${days}d `;
+    if (hours > 0) time += `${hours}h `;
+    if (minutes > 0) time += `${minutes}m `;
+    if (seconds > 0 || time === '') time += `${seconds}s`;
+
+    return time.trim();
+}
+
+async function pingCommand(sock, chatId, message) {
+    try {
+        const start = Date.now();
+        await sock.sendMessage(chatId, { text: 'Pong!', ...channelInfo }, { quoted: message });
+        const end = Date.now();
+        const ping = Math.round((end - start) / 2);
+
+        const uptimeInSeconds = process.uptime();
+        const uptimeFormatted = formatTime(uptimeInSeconds);
+
+        const botInfo = `
+┏━━〔 🤖 𝐁𝐑𝐎𝐖𝐍𝐈𝐄 𝐌𝐃 〕━━┓
+┃ 🤩 Ping     : ${ping} ms
+┃ ⏱️ Uptime   : ${uptimeFormatted}
+┃ 🔖 Version  : v${settings.version}
+┗━━━━━━━━━━━━━━━━━━━━━━┛`.trim();
+
+        await sock.sendMessage(chatId, { 
+            text: botInfo,
+            ...channelInfo 
+        }, { quoted: message });
+
+    } catch (error) {
+        console.error('Error in ping command:', error);
+        await sock.sendMessage(chatId, { 
+            text: '❌ Failed to get bot status.',
+            ...channelInfo 
+        }, { quoted: message });
+    }
+}
+
+module.exports = pingCommand;

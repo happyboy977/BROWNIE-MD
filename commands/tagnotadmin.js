@@ -1,0 +1,74 @@
+/**
+ * Brownie-MD - A WhatsApp Bot
+ * Copyright (c) 2026 Ebube
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the MIT License.
+ */
+
+const isAdmin = require('../lib/isAdmin');
+
+const channelInfo = {
+    contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+            newsletterJid: '120363161513685998@newsletter',
+            newsletterName: 'Brownie-MD',
+            serverMessageId: -1
+        }
+    }
+};
+
+async function tagNotAdminCommand(sock, chatId, senderId, message) {
+    try {
+        const { isSenderAdmin, isBotAdmin } = await isAdmin(sock, chatId, senderId);
+
+        if (!isBotAdmin) {
+            await sock.sendMessage(chatId, { 
+                text: 'Please make the bot an admin first.',
+                ...channelInfo 
+            }, { quoted: message });
+            return;
+        }
+
+        if (!isSenderAdmin) {
+            await sock.sendMessage(chatId, { 
+                text: 'Only admins can use the .tagnotadmin command.',
+                ...channelInfo 
+            }, { quoted: message });
+            return;
+        }
+
+        const groupMetadata = await sock.groupMetadata(chatId);
+        const participants = groupMetadata.participants || [];
+
+        const nonAdmins = participants.filter(p => !p.admin).map(p => p.id);
+        if (nonAdmins.length === 0) {
+            await sock.sendMessage(chatId, { 
+                text: 'No non-admin members to tag.',
+                ...channelInfo 
+            }, { quoted: message });
+            return;
+        }
+
+        let text = '🔊 *Hello Everyone:*\n\n';
+        nonAdmins.forEach(jid => {
+            text += `@${jid.split('@')[0]}\n`;
+        });
+
+        await sock.sendMessage(chatId, { 
+            text, 
+            mentions: nonAdmins,
+            ...channelInfo 
+        }, { quoted: message });
+    } catch (error) {
+        console.error('Error in tagnotadmin command:', error);
+        await sock.sendMessage(chatId, { 
+            text: 'Failed to tag non-admin members.',
+            ...channelInfo 
+        }, { quoted: message });
+    }
+}
+
+module.exports = tagNotAdminCommand;
