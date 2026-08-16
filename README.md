@@ -6,7 +6,7 @@ A powerful and feature-rich WhatsApp multi-device automation bot built with Java
 * **Packname:** 𝐁𝐑𝐎𝐖𝐍𝐈𝐄 𝐌𝐃
 * **Author:** COACH EBUBE
 * **Owner:** EBUBE
-* **Owner Number:** [YOUR NUMBER HERE]
+* **Owner Number:** []
 ## 🚀 Features
 * Multi-device WhatsApp support
 * Advanced interactive commands and tools
